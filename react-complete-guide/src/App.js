@@ -5,36 +5,49 @@ import Person from './Person/Person';
 class App extends Component {
   state = {
     persons: [
-      { name: 'Aj', age: 20 },
-      { name: 'Ian', age: 24 },
-      { name: 'Joanna', age: 24 },
+      { id:'123', name: 'Aj', age: 20 },
+      { id:'124', name: 'Ian', age: 24 },
+      { id:'125', name: 'Joanna', age: 24 },
     ],
-    otherState: 'Some other state'
+    otherState: 'Some other state',
+    showPersons: false
   }
 
-  switchNameHandler = (newName) => {
-    // this.state.persons[0].name = 'Jude';
+  nameChangedHandler = (event, id) => {
+    const personIndex = this.state.persons.findIndex(p => {
+      return p.id === id;
+    });
+
+    // const person = this.state.persons[personIndex]; should not mutate directly
+    // const person = Object.assign({}, this.state.persons[personIndex]); another possible approach
+    //better approach:
+    const person = {
+      ...this.state.persons[personIndex]
+    }
+
+    person.name = event.target.value;
+
+    const persons = [...this.state.persons];
+    persons[personIndex] = person;
+
     this.setState({
-      persons: [
-        { name: 'Jude', age: 20 },
-        { name: 'Ian', age: 24 },
-        { name: newName, age: 23 },
-      ]
+      persons: persons
     })
   }
 
-  nameChangedHandler = (event) => {
-    this.setState({
-      persons: [
-        { name: 'Jude', age: 20 },
-        { name: event.target.value, age: 24 },
-        { name: 'Joanna', age: 23 },
-      ]
-    })
+  deletePersonHandler = ( personIndex ) => {
+    // const persons = this.state.persons.slice();
+    const persons = [...this.state.persons];
+    persons.splice(personIndex, 1);
+    this.setState({persons: persons});
+  }
+
+  togglePersonsHandler = () => {
+    const doesShow = this.state.showPersons;
+    this.setState({showPersons: !doesShow}); //gets merged with the outer state, the old state is not touched
   }
 
   render() {
-
     const style = {
       backgroundColor: 'white',
       font: 'inherit',
@@ -43,24 +56,33 @@ class App extends Component {
       cursor: 'pointer'
     };
 
+    let persons = null;
+
+    if (this.state.showPersons) {
+      persons = (
+        <div>
+          {this.state.persons.map((person, index) => {
+            return <Person 
+                    click={() => this.deletePersonHandler(index)}
+                    changed={(event) => this.nameChangedHandler(event, person.id)}
+                    name={person.name} 
+                    age={person.age}
+                    key={person.id} />
+          })}
+        </div> 
+      );
+    }
+
     return (
       <div className="App">
         <h1>Hi, I am a React App</h1>
         <p>This is working well!!</p>
         <button 
           style={style}
-          onClick={() => this.switchNameHandler('Joanna gerl')}>Switch name</button>
-        <Person 
-          name={this.state.persons[0].name} 
-          age={this.state.persons[0].age}/>
-        <Person 
-          name={this.state.persons[1].name} 
-          age={this.state.persons[1].age}
-          click={this.switchNameHandler.bind(this, 'Joanna!')}
-          changed={this.nameChangedHandler}>My hobbies: Cinematography</Person>
-        <Person 
-          name={this.state.persons[2].name} 
-          age={this.state.persons[2].age}/>
+          onClick={this.togglePersonsHandler}>Toggle persons</button>
+        
+        {persons}
+
       </div>
     );
     // return React.createElement('div', {className: 'App'}, React.createElement('h1', null, `This works`));
